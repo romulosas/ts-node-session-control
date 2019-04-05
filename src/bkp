@@ -1,0 +1,116 @@
+import * as express from 'express';
+import * as http from 'http';
+import * as WebSocket from 'ws';
+import * as Cors from 'cors';
+import * as BodyParser from 'body-parser';
+import * as SocketIo from 'socket.io';
+
+//app.use(bp.urlencoded({extended: true}))
+//app.use(bp.json())
+//app.use(function(req, res, next) {
+//    debugger;
+//  res.header("Access-Control-Allow-Origin", "*");
+//  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//  next();
+//});
+
+const app = express();
+const cors = Cors;
+const sock = SocketIo;
+
+var whitelist = ['http://inpactloginsecurityclient.in'];
+
+var options = {
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token"],
+    credentials: false,
+    methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+    origin: function (origin: string, callback: any) {
+      if (whitelist.indexOf(origin) !== -1) {
+        callback(null, true)
+      } else {
+         console.log("Intento de acceso no autorizado. (" + origin +")");
+         callback(new Error('Acceso no autorizado.'))
+      }
+    },
+    preflightContinue: false
+  }
+
+  app.use(cors(options));
+
+//   app.get('socket.io/', function (req, res, next) {
+//     res.json({msg: 'This has CORS enabled'})
+//   });
+
+
+const server = http.createServer(app);
+const wss = new WebSocket.Server({server});
+
+interface ExtWebSocket extends WebSocket {
+    isAlive: boolean;
+}
+
+//Declaramos el evento de conexión a la instancia WebSocket.
+wss.on('connection', (ws: WebSocket) => {
+
+    const extWs = ws as ExtWebSocket;
+    
+    //Declara la conexión como activa.
+    extWs.isAlive = true;
+
+    //Al recibir el evento 'pong', vuelve a definir la conexión como activa
+    ws.on('pong', () => {
+        console.info('[InpactBot][status]: Pong!');
+        extWs.isAlive = true;
+    });
+
+    //Escucha el evento 'message'
+    ws.on('message', (message: string) => {
+        console.info('Mensaje recibido: %s', message);
+        ws.send('[InpactBot][message]: Hemos recibimo tu mensaje: ' + message);
+    })
+
+    //Envia mensaje de respuesta.
+    //ws.send(JSON.stringify({msg2: '[InpactBot] - Bienvenido'}));
+    console.info('[InpactBot][conectado]: Un nuevo cliente se ha conectado al servidor.')
+    ws.send('[InpactBot][conectado]: Bienvenido!');
+
+    ws.on('error', (err) => {
+        console.warn('[InpactBot][error]: Se ha generado un error, motivo: ' + err)
+        ws.send('[InpactBot][desconectado]: Ops, hubo un error. (' + err + ')');
+    });
+
+    ws.on('close', (err) => {
+        console.info('[InpactBot][desconectado]: Se ha perdido la conexión con el cliente. (' + err + ')')
+    });
+
+});
+
+//Checa conexión con el cliente.
+setInterval(() => {
+    wss.clients.forEach((ws: WebSocket) => {
+        
+        const extWs = ws as ExtWebSocket;
+        
+        if(!extWs.isAlive){
+            console.info('[InpactBot][status]: Conexión inactiva, vamos a cerrar la conexión.')
+            return ws.terminate();
+        }
+
+        console.info('[InpactBot][status]: Ping!')
+
+        extWs.isAlive = false; 
+        
+        ws.ping(null, undefined);
+
+    });
+}, 10000);
+
+
+//Inicializamos el server.
+server.listen(process.env.PORT || 8999, () => {
+    console.log('Inpact Login Security Server ha sido inicializado en el puerto ' + server.address().port);
+});
+
+// server.io = si.listen(server, () => {
+
+// });
