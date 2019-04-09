@@ -23,9 +23,7 @@ const mongoose = Mongoose;
 const app = express();
 const cors = Cors;
 const bp = BodyParser;
-const clientsDomainlist = [
-    'http://qaqms.inpact.cl'
-];
+const clientsDomainlist = [];
 const mongooseUri     = "mongodb://localhost:27017/local";
 const optionsDB = {
     useNewUrlParser: true,
@@ -48,12 +46,13 @@ const options = {
     methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
     origin: function (origin: string, callback: any) 
     {
-        if (clientsDomainlist.indexOf(origin) !== -1) {
+        callback(null, true)
+        /*if (clientsDomainlist.indexOf(origin) !== -1) {
         callback(null, true)
         } else {
             Log.create(AgentMessage.Server, "", EventType.Deny, "Intento de acceso no autorizado. (" + origin +")");
             callback(new Error('Acceso no autorizado.'))
-        }
+        }*/
     },
 
     preflightContinue: false

@@ -26,9 +26,7 @@ const mongoose = Mongoose;
 const app = express();
 const cors = Cors;
 const bp = BodyParser;
-const clientsDomainlist = [
-    'http://qaqms.inpact.cl'
-];
+const clientsDomainlist = [];
 const mongooseUri = "mongodb://localhost:27017/local";
 const optionsDB = {
     useNewUrlParser: true,
@@ -48,13 +46,13 @@ const options = {
     credentials: true,
     methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
     origin: function (origin, callback) {
-        if (clientsDomainlist.indexOf(origin) !== -1) {
-            callback(null, true);
-        }
-        else {
-            Log_1.Log.create("Servidor" /* Server */, "", "Conexi\u00F3n Rechazada" /* Deny */, "Intento de acceso no autorizado. (" + origin + ")");
-            callback(new Error('Acceso no autorizado.'));
-        }
+        callback(null, true);
+        /*if (clientsDomainlist.indexOf(origin) !== -1) {
+        callback(null, true)
+        } else {
+            Log.create(AgentMessage.Server, "", EventType.Deny, "Intento de acceso no autorizado. (" + origin +")");
+            callback(new Error('Acceso no autorizado.'))
+        }*/
     },
     preflightContinue: false
 };
