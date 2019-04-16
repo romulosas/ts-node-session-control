@@ -27,7 +27,8 @@ const app = express();
 const cors = Cors;
 const bp = BodyParser;
 const clientsDomainlist = [];
-const mongooseUri = "mongodb://localhost:27017/local";
+const mongooseUri = "mongodb://ds135456.mlab.com:35456@ds135456.mlab.com:35456/ts-node-session-control";
+//const mongooseUri     = "mongodb://localhost:27017/local";
 const optionsDB = {
     useNewUrlParser: true,
     autoIndex: false,
@@ -40,7 +41,7 @@ const optionsDB = {
     socketTimeoutMS: 45000,
     family: 4 // Use IPv4, skip trying IPv6
 };
-const port = 8999;
+const port = 3000;
 const options = {
     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token"],
     credentials: true,
