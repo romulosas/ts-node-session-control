@@ -28,7 +28,6 @@ const cors = Cors;
 const bp = BodyParser;
 const clientsDomainlist = [];
 const mongooseUri = "mongodb://admin:admin123@ds135456.mlab.com:35456/ts-node-session-control";
-//const mongooseUri     = "mongodb://localhost:27017/local";
 const optionsDB = {
     useNewUrlParser: true,
     autoIndex: false,
@@ -403,7 +402,7 @@ setInterval(() => {
     });
 }, 10000);
 //Inicializamos el server.
-server.listen(process.env.PORT || port, 'ts-node-session-control.herokuapp.com', () => {
+server.listen(process.env.PORT || port, '0.0.0.0', () => {
     Log_1.Log.create("Servidor" /* Server */, "", "Servicio Inicializado" /* Open */, "Servicio inicializado. (puerto: " + port + ")");
     if (mongoose.connection.readyState === 1) {
         mongoose.disconnect();
