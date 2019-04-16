@@ -1,0 +1,155 @@
+<html>
+<head>
+<title>
+    TS NODE SESSION CONTROL CLIENT
+</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+</head>
+<body>
+    <script>
+    var authLib = authLib || (function(){
+    
+        let _host                       = 'ts-node-session-control.herokuapp.com';
+        let _port                       = 3000;
+        let _messageToClient            = "Según nuestros registros, el usuario ya tiene una sesión activa.";
+        let _messageSessionExpired      = "Tu sesión ha expirado.";
+        let _messageErrorToClient       = "Hubo un error al validar la sesión.";
+        let _messageToClientWebSocket   = "El navegador no tiene soporte para WebSocket.";
+        let _messageLogout				= "Cerrando Sesión."
+        let _timeout                    = 60000; //60seg
+        let _pingTime                   = 10000; //10seg
+        let _urlToLogout                = null;
+        let _classToLogout              = null;
+        let _arg                        = {
+                                            platform: null,
+                                            session_user_id: null,
+                                            username: null
+                                        };
+    
+        window.WebSocket = window.WebSocket || window.MozWebSocket;
+    
+        return {
+            config : function(urlToLogout, classToLogout, Args) { 
+                _arg.platform = Args.platform;  
+                _arg.session_user_id = Args.sessionUserId;  
+                _arg.username = Args.username;  
+                _urlToLogout = urlToLogout;
+                _classToLogout = classToLogout;
+            },
+            auth : function() 
+            {
+                let getTime = function(){
+                    let dt = new Date();
+                    let time = "[" + dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds() + "] - ";
+                    return time;
+                }
+    
+                window.WebSocket = window.WebSocket || window.MozWebSocket;
+                if (!window.WebSocket) 
+                {
+                    lockScreen(_msgToClientNoWebSocket);
+                    setInterval(function() {
+                        window.location.href = _urlToLogout;
+                    }, 5000);
+                    return;
+                }
+             
+                let socket = new WebSocket('ws://' + _host + ':' + _port, [_arg.platform, _arg.session_user_id, _arg.username]);
+    
+                let idleLogout = function() {
+                    let t;
+                    window.onload = resetTimer;
+                    window.onmousemove = resetTimer;
+                    window.onmousedown = resetTimer;  // catches touchscreen presses as well      
+                    window.ontouchstart = resetTimer; // catches touchscreen swipes as well 
+                    window.onclick = resetTimer;      // catches touchpad clicks as well
+                    window.onkeypress = resetTimer;   
+                    window.addEventListener('scroll', resetTimer, true); // improved; see comments
+                
+                    function logout() {
+                        if(socket.readyState === socket.OPEN)
+                             socket.send('disconnect');
+                    }
+                
+                    function resetTimer() {
+                        clearTimeout(t);
+                        t = setTimeout(logout, _timeout);  // time is in milliseconds
+                    }
+                }
+    
+                socket.onopen = function() {
+                    console.log(getTime() + "Conectando al WebSocket.");
+                    idleLogout();
+                }
+            
+                socket.onmessage = function(message) {
+                    try {
+                            let json = JSON.parse(message.data);
+                            
+                            console.log(getTime() + "Server: ("+ json.message +")");
+    
+                            switch(json.code)
+                            {
+                                case 403: //Fordidden Code
+                                    lockScreen(_messageToClient);
+                                    setInterval(function() {
+                                        window.location.href = _urlToLogout;
+                                    }, 5000);
+    
+                                break;
+    
+                                case 408: //Timeout Code
+                                    lockScreen(_messageSessionExpired);
+                                    setInterval(function() {
+                                        window.location.href = _urlToLogout;
+                                    }, 5000);
+                                break;
+                                
+                                case 200: //Logout
+                                    lockScreen(_messageLogout);
+                                    setInterval(function() {
+                                        window.location.href = _urlToLogout;
+                                    }, 5000);
+                                break;
+    
+                                //case 408: //Ping
+                                //window.location.href = _urlToLogout;
+                                //break;
+                            }
+    
+                      } catch (e) {
+                            console.log(getTime() + "Invalid JSON: ("+ message.data +")");
+                        return;
+                      }
+                }
+            
+                socket.onerror = function (error) { console.log(getTime() + "Hubo un error en la conexión. ("+ error +")");  };
+            
+                setInterval(function() {
+                    try
+                    {
+                        console.log(getTime() + ((socket.readyState !== 1) ? "Sin conexión con el servidor." : "Conexión activa."));
+                    }
+                    catch (ex){
+                        console.log(getTime() + "Error. (" + ex + ")");
+                    }
+                }, _pingTime);
+                
+                _classToLogout = "." + _classToLogout;
+                $( _classToLogout ).click(function() {
+                    if(socket.readyState === socket.OPEN) socket.send('logout');
+                });
+            }
+        };
+    }());
+    let HOME = "http://localhost/";
+    let paramsAuth = {
+        platform: 'client',
+        sessionUserId: '1234',
+        username: 'clients-js'
+    }
+    authLib.config(HOME + 'logout', 'logoutClass', paramsAuth);
+    authLib.auth();
+    </script>
+</body>
+</html>

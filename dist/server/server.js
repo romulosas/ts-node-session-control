@@ -27,7 +27,7 @@ const app = express();
 const cors = Cors;
 const bp = BodyParser;
 const clientsDomainlist = [];
-const mongooseUri = "mongodb://ds135456.mlab.com:35456@ds135456.mlab.com:35456/ts-node-session-control";
+const mongooseUri = "mongodb://admin:admin123@ds135456.mlab.com:35456/ts-node-session-control";
 //const mongooseUri     = "mongodb://localhost:27017/local";
 const optionsDB = {
     useNewUrlParser: true,
@@ -76,22 +76,27 @@ wss.on('connection', (ws, req) => {
     let arrClientData = clientDatas.split(", ");
     CLIENTS.set(socketClientId, ws);
     //Desconecta clientes que no tengan permiso de acceso.
-    if (clientsDomainlist.indexOf(origin) === -1) {
-        disconnectType = 6 /* DomainUnauthorized */;
+    /*if (clientsDomainlist.indexOf(origin) === -1) {
+
+        disconnectType = DisconnectType.DomainUnauthorized;
+
         let message = "Intento de acceso no autorizado. (" + origin + ")";
-        Log_1.Log.create("Servidor" /* Server */, "", "Conexi\u00F3n Rechazada" /* Deny */, message);
-        ws.send(JSON.stringify({ time: Log_1.Log.getTime(), message: "Intento de acceso no autorizado.", event: "Conexi\u00F3n Rechazada" /* Deny */, code: 403 /* Forbidden */ }));
+        Log.create(AgentMessage.Server, "", EventType.Deny, message);
+
+        ws.send(JSON.stringify({ time: Log.getTime(), message: "Intento de acceso no autorizado.", event: EventType.Deny, code: CodeMessage.Forbidden }));
+
         event.save({
-            environment: "Servidor" /* Server */,
+            environment: AgentMessage.Server,
             tokenWebSocket: socketClientId,
             sessionId: null,
             client: 'Servidor',
             username: 'Admin',
             message: message,
-            event: "Conexi\u00F3n Rechazada" /* Deny */
+            event: EventType.Deny
         });
+
         ws.close();
-    }
+    }*/
     //Valida si la conexión se mantiene activa.
     const extWs = ws;
     extWs.isAlive = true;
