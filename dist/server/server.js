@@ -403,7 +403,7 @@ setInterval(() => {
     });
 }, 10000);
 //Inicializamos el server.
-server.listen(port, '127.0.0.1', () => {
+server.listen(process.env.PORT || port, '127.0.0.1', () => {
     Log_1.Log.create("Servidor" /* Server */, "", "Servicio Inicializado" /* Open */, "Servicio inicializado. (puerto: " + port + ")");
     if (mongoose.connection.readyState === 1) {
         mongoose.disconnect();
